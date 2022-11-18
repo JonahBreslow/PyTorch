@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import precision_recall_curve, precision_score, recall_score, accuracy_score
 
 # Data preprocessing
 
@@ -17,6 +18,7 @@ n_features = X.shape[1]
 label_balance = y[y==1].shape[0] / y.shape[0]
 
 print(f"""
+\nDATA PROFILE
 Samples: {n_samples}
 Features: {n_features}
 % Class 1: {label_balance:.1%}
@@ -52,13 +54,15 @@ class LogisticRegression(nn.Module):
         return logits
 
 model = LogisticRegression(X_train)
+print("\nMODEL ARCHITECTURE")
 print(model)
 # Loss and Optimizer
 loss_fn = nn.BCELoss()
-optim = torch.optim.Adam(params=model.parameters(), lr=.05)
+optim = torch.optim.Adam(params=model.parameters())
 
 # Training loop
 epochs = range(400)
+print("\nTRAINING...")
 for epoch in epochs:
     # do a forward pass
     y_pred = model(X_train)
@@ -75,15 +79,28 @@ for epoch in epochs:
     optim.zero_grad()
 
     if epoch % 100 == 0:
-        print(f"""
-        Epoch: {epoch} || Loss: {loss}
-        """)
+        print(f"""Epoch: {epoch} || Loss: {loss:.3f}""")
     
 with torch.no_grad():
     test_pred = model(X_test).round()
-    test_acc = test_pred.eq(y_test).sum() / float(y_test.shape[0])
+    test_acc = accuracy_score(y_true=y_test, y_pred=test_pred)
+    test_precision = precision_score(y_true=y_test, y_pred=test_pred)
+    test_recall = recall_score(y_true=y_test, y_pred=test_pred)
 
     train_pred = model(X_train).round()
-    train_acc = train_pred.eq(y_train).sum() / float(y_train.shape[0])
-    print(f"Test accuracy: {test_acc:.2%}")
-    print(f"Train accuracy: {train_acc:.2%}")
+    train_acc = accuracy_score(y_true=y_train, y_pred=train_pred)
+    train_precision = precision_score(y_true=y_train, y_pred=train_pred)
+    train_recall = recall_score(y_true=y_train, y_pred=train_pred)
+
+print(f"""\n
+TRAINING RESULTS
+*****TEST***** 
+Accuracy:  {test_acc:.2%}
+Precision: {test_precision:.2%}
+Recall:    {test_recall:.2%}
+
+*****TRAIN***** 
+Accuracy:  {train_acc:.2%}
+Precision: {train_precision:.2%}
+Recall:    {train_recall:.2%}
+""")
